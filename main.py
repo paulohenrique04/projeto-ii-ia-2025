@@ -2,6 +2,7 @@ import random
 
 # Função de fitness
 def fitness_function(individual):
+    
     """"
     A função de fitness vai avaliar a quantidade de peças que estão em ameaça,
     neste caso, o número de pares de rainhas que estão se ameaçando na mesma diagonal.
