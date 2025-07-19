@@ -1,0 +1,68 @@
+/eightQueens/
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.env/
+.venv/
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyInstaller
+# These files are typically written by a Python script from a template
+# before PyInstaller builds the executable, to inject date/other information.
+# They should be ignored to prevent unnecessary commits.
+# *.spec
+# build/
+# dist/
+
+# MyPy
+.mypy_cache/
+
+# Editor-specific files
+.idea/  # IntelliJ IDEA / PyCharm
+.vscode/ # Visual Studio Code
+*.sublime-project
+*.sublime-workspace
+
+# OS-specific files
+.DS_Store
+Thumbs.db
