@@ -1,55 +1,55 @@
-# Genetic Algorithm for the N-Queens Problem
+# Algoritmo Genético para o Problema das N-Rainhas
 
-This project implements a configurable Genetic Algorithm (GA) to solve the N-Queens problem, as specified in the "Trabalho 2 - Algoritmos Genéticos" assignment.
+Este projeto implementa um Algoritmo Genético (AG) configurável para resolver o problema das N-Rainhas, conforme especificado no "Trabalho 2 - Algoritmos Genéticos".
 
-## Project Structure
+## Estrutura do Projeto
 
-The project is organized into several modules to ensure separation of concerns and maintainability:
+O projeto é organizado em vários módulos para garantir a separação de responsabilidades e a manutenibilidade:
 
--   `main.py`: The main script to run the experiments.
--   `plotter.py`: A script to generate plots from the experiment results.
--   `core/`: Contains the basic building blocks of the GA (Individual, Population).
--   `problem/`: Defines the N-Queens problem, specifically the fitness function.
--   `ga/`: Contains the main GA engine and the strategy implementations.
-    -   `ga/strategies/`: Holds the different implementations for selection, crossover, mutation, and elitism.
--   `utils/`: Contains helper classes, such as the CSV logger.
--   `results/`: Directory where all CSV output files from the experiments are stored.
--   `plots/`: Directory where all generated plots are saved.
+-   `main.py`: O script principal para executar os experimentos.
+-   `plotter.py`: Um script para gerar gráficos a partir dos resultados dos experimentos.
+-   `core/`: Contém os blocos de construção básicos do AG (`Individual`, `Population`).
+-   `problem/`: Define a lógica do problema das N-Rainhas, especificamente a função de fitness.
+-   `ga/`: Contém o motor principal do AG e as implementações das estratégias.
+    -   `ga/strategies/`: Armazena as diferentes implementações para seleção, cruzamento, mutação e elitismo.
+-   `utils/`: Contém classes de utilidades, como o logger para arquivos CSV.
+-   `results/`: Diretório onde todos os arquivos de saída CSV dos experimentos são armazenados.
+-   `plots/`: Diretório onde todos os gráficos gerados são salvos.
 
-## Prerequisites
+## Pré-requisitos
 
-You need Python 3.8+ and the libraries listed in `requirements.txt`.
+Você precisa do Python 3.8+ e das bibliotecas listadas no arquivo `requirements.txt`.
 
-## Installation
+## Instalação
 
-1.  Clone the repository or download the source code.
-2.  Navigate to the project directory.
-3.  Install the required packages:
+1.  Clone o repositório ou baixe o código-fonte.
+2.  Navegue até o diretório do projeto.
+3.  Instale os pacotes necessários:
     ```bash
     pip install -r requirements.txt
     ```
 
-## How to Run
+## Como Executar
 
-### 1. Running the Experiments
+### 1. Executando os Experimentos
 
-To run all the experiments as defined in the assignment, execute the `main.py` script from your terminal:
+Para executar todos os experimentos conforme definido na especificação do trabalho, execute o script `main.py` a partir do seu terminal:
 
 ```bash
 python main.py
 ```
 
-This will:
-- Run experiments for comparing different GA operators (Selection, Crossover, etc.).
-- Perform 20 runs for each configuration, as specified.
-- Save detailed logs for each run and a summary CSV for each experiment part inside the `results/` directory.
+Este comando irá:
+- Rodar os experimentos para comparar os diferentes operadores do AG (Seleção, Crossover, etc.).
+- Realizar múltiplas execuções para cada configuração, garantindo robustez estatística.
+- Salvar logs detalhados para cada execução e um CSV de sumário para cada parte do experimento dentro do diretório `results/`.
 
-### 2. Generating the Plots
+### 2. Gerando os Gráficos
 
-After the experiments are finished and the `results/` folder is populated with CSV files, run the `plotter.py` script to generate visual analyses:
+Após a conclusão dos experimentos e o preenchimento da pasta `results/` com os arquivos CSV, execute o script `plotter.py` para gerar as análises visuais:
 
 ```bash
 python plotter.py
 ```
 
-This will create PNG images of the plots and save them in the `plots/` directory. These plots are referenced in the final report.
+Este comando criará imagens `.png` dos gráficos e as salvará no diretório `plots/`. Estes gráficos são essenciais para a análise e são referenciados no relatório final.

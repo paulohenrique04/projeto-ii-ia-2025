@@ -1,147 +1,135 @@
-# Final Report: Genetic Algorithms for the N-Queens Problem
+# Relatório Técnico: Algoritmos Genéticos para o Problema das N-Rainhas
 
-**Course:** Inteligência Artificial - 2025.1
+**Curso:** Inteligência Artificial - 2025.1
 **Professor:** Samy Sá
-**University:** Universidade Federal do Ceará - Campus de Quixadá
+**Universidade:** Universidade Federal do Ceará - Campus de Quixadá
 
 ---
 
-## 1. Implementation
+## 1. Implementação
 
-This section details the technical aspects of the project implementation.
+Esta seção detalha os aspectos técnicos da implementação do projeto, as ferramentas utilizadas e as decisões de design da arquitetura do software.
 
-### 1.1. Language and Libraries
+### 1.1. Linguagem e Bibliotecas
 
--   **Language:** Python 3.10
--   **Core Libraries:**
-    -   `pandas`: Used for data manipulation and handling the CSV files containing experiment results.
-    -   `matplotlib` & `seaborn`: Used for generating high-quality plots for data analysis and visualization.
-    -   `numpy`: Utilized for efficient numerical operations, though its direct use is minimal.
-    -   `tqdm`: Provides progress bars for a better user experience during long-running experiments.
+-   **Linguagem:** Python 3.10
+-   **Bibliotecas Principais:**
+    -   `pandas`: Essencial para a manipulação de dados, leitura e escrita dos arquivos `.csv` contendo os resultados dos experimentos.
+    -   `matplotlib` & `seaborn`: Utilizadas para a geração de gráficos estatísticos de alta qualidade, como os de convergência e os boxplots, permitindo uma análise visual robusta.
+    -   `tqdm`: Fornece barras de progresso interativas no terminal, melhorando a experiência do usuário durante as execuções, que podem ser demoradas.
 
-### 1.2. Code Structure and Design
+### 1.2. Arquitetura do Código e Design
 
-The codebase is structured into modules to adhere to the **SOLID principles** of object-oriented design.
+A base de código foi estruturada de forma modular, aderindo aos princípios **SOLID** de design orientado a objetos para promover flexibilidade e manutenibilidade.
 
--   **`core`**: Contains fundamental classes `Individual` (representing a single board configuration) and `Population`.
--   **`problem`**: Encapsulates the logic specific to the N-Queens problem. The `NQueensFitness` class is responsible for calculating the fitness of any given individual, thus decoupling the problem definition from the algorithm itself.
--   **`ga`**: This module contains the `GeneticAlgorithm` engine. Crucially, it is designed using the **Strategy Pattern**. It is initialized with specific strategy objects for selection, crossover, mutation, and elitism. This promotes the **Open/Closed Principle**, as new strategies can be added without modifying the main `GeneticAlgorithm` class.
--   **`main.py`**: Acts as the orchestrator for running the series of experiments described in the assignment.
--   **`plotter.py`**: A dedicated script for post-experiment analysis, reading the generated CSV files and creating visualizations.
+-   **`core`**: Contém as classes fundamentais `Individual` (um cromossomo representando um tabuleiro) e `Population`.
+-   **`problem`**: Isola a lógica específica do problema das N-Rainhas. A classe `NQueensFitness` é a única responsável por avaliar um indivíduo, desacoplando a definição do problema do algoritmo em si.
+-   **`ga`**: Contém o motor `GeneticAlgorithm`. Sua arquitetura é baseada no **Padrão de Projeto Strategy**, sendo inicializado com objetos de estratégia para seleção, cruzamento, mutação и elitismo. Isso respeita o **Princípio Aberto/Fechado**, pois novas estratégias podem ser adicionadas sem modificar o motor principal do AG.
+-   **`main.py`**: Serve como o orquestrador dos experimentos, configurando e executando as diferentes variações do AG conforme a especificação do trabalho.
+-   **`plotter.py`**: Script dedicado à análise pós-experimento, responsável por ler os dados brutos dos arquivos `.csv` e gerar as visualizações gráficas.
 
-### 1.3. How to Execute
+---
 
-To replicate the experiments and generate the results, follow these steps:
+## 2. Design dos Algoritmos
 
-1.  **Install Dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-2.  **Run Experiments:** Execute the main script. This will populate the `results/` directory with CSV data.
-    ```bash
-    python main.py
-    ```
-3.  **Generate Plots:** After the experiments are complete, run the plotter script. This will create all analytical graphs in the `plots/` folder.
-    ```bash
-    python plotter.py
-    ```
+Esta seção justifica as escolhas de design para os componentes do Algoritmo Genético e como eles se aplicam ao problema das N-Rainhas.
 
-## 2. Design of the Algorithms
+### 2.1. Representação do Indivíduo e Função de Fitness
 
-This section justifies the choices made for the various components of the Genetic Algorithm.
+-   **Representação:** Um indivíduo (cromossomo) é representado por um vetor de `n` inteiros. O índice `i` do vetor representa a coluna, e o valor `s[i]` representa a linha onde a rainha daquela coluna está posicionada. Esta representação já previne ataques verticais, pois há apenas um valor por coluna.
+-   **Função de Fitness:** O objetivo é minimizar o número de pares de rainhas em conflito. Como os AGs canonicamente maximizam o fitness, a função foi definida para **maximizar o número de pares de rainhas que não se atacam**. O número total de pares em um tabuleiro `n x n` é $N_{total} = \frac{n(n-1)}{2}$. A função de fitness calcula o número de ataques (horizontais e diagonais), $N_{ataques}$, e o fitness final é:
+    $$ \text{fitness} = N_{total} - N_{ataques} $$
+    Uma solução perfeita atinge o fitness máximo de $N_{total}$, que para N=10 é $10 \times 9 / 2 = 45$.
 
-### 2.1. Individual Representation and Fitness Function
+### 2.2. Variações de Operadores e Combinações
 
--   **Representation:** An individual (chromosome) is represented by a vector of `n` integers. The index `i` of the vector represents the column, and the value `s[i]` represents the row where the queen in that column is placed. This representation inherently prevents vertical attacks.
--   **Fitness Function:** The goal is to minimize the number of attacking queen pairs. Since GAs typically maximize fitness, we define fitness as the number of *non-attacking* pairs. The total number of unique queen pairs on an `n x n` board is $N_{total} = \frac{n(n-1)}{2}$. The number of attacking pairs (horizontal and diagonal) is $N_{attacking}$. The fitness is therefore calculated as:
-    $$ \text{fitness} = N_{total} - N_{attacking} $$
-    A perfect solution has $N_{attacking} = 0$ and thus achieves the maximum possible fitness of $N_{total}$.
+O design flexível permite 16 combinações de algoritmos distintas a partir dos operadores implementados.
 
-### 2.2. GA Operator Variations
+-   **Seleção (2):** `TournamentSelection`, `RouletteWheelSelection`.
+-   **Cruzamento (2):** `SinglePointCrossover`, `TwoPointCrossover`.
+-   **Mutação (2):** `SwapMutation`, `RandomResettingMutation`.
+-   **Elitismo (2):** `BestNElitism`, `PercentageElitism`.
 
-The following variations were implemented to be compared experimentally.
+O conjunto completo dos 16 algoritmos é:
+1.  (TournamentSelection, SinglePointCrossover, SwapMutation, BestNElitism)
+2.  (TournamentSelection, SinglePointCrossover, SwapMutation, PercentageElitism)
+3.  (TournamentSelection, SinglePointCrossover, RandomResettingMutation, BestNElitism)
+4.  (TournamentSelection, SinglePointCrossover, RandomResettingMutation, PercentageElitism)
+5.  (TournamentSelection, TwoPointCrossover, SwapMutation, BestNElitism)
+6.  (TournamentSelection, TwoPointCrossover, SwapMutation, PercentageElitism)
+7.  (TournamentSelection, TwoPointCrossover, RandomResettingMutation, BestNElitism)
+8.  (TournamentSelection, TwoPointCrossover, RandomResettingMutation, PercentageElitism)
+9.  (RouletteWheelSelection, SinglePointCrossover, SwapMutation, BestNElitism)
+10. (RouletteWheelSelection, SinglePointCrossover, SwapMutation, PercentageElitism)
+11. (RouletteWheelSelection, SinglePointCrossover, RandomResettingMutation, BestNElitism)
+12. (RouletteWheelSelection, SinglePointCrossover, RandomResettingMutation, PercentageElitism)
+13. (RouletteWheelSelection, TwoPointCrossover, SwapMutation, BestNElitism)
+14. (RouletteWheelSelection, TwoPointCrossover, SwapMutation, PercentageElitism)
+15. (RouletteWheelSelection, TwoPointCrossover, RandomResettingMutation, BestNElitism)
+16. (RouletteWheelSelection, TwoPointCrossover, RandomResettingMutation, PercentageElitism)
 
-1.  **Selection:**
-    -   **Tournament Selection:** Chooses `k` individuals at random and selects the best one. It's efficient and less susceptible to premature convergence compared to Roulette Wheel.
-    -   **Roulette Wheel Selection:** Selects individuals based on probability proportional to their fitness. It gives every individual a chance to be selected but can be dominated by a few super-fit individuals.
+### 2.3. Parte 0: Escolha de Parâmetros Numéricos
 
-2.  **Crossover:**
-    -   **Single-Point Crossover:** A single point is chosen, and the genetic material after this point is swapped between two parents. It is simple and a classic baseline.
-    -   **Two-Point Crossover:** Two points are chosen, and the segment between them is swapped. This can preserve smaller building blocks (schemas) better than single-point crossover.
+Antes dos experimentos comparativos, foi realizada uma etapa de ajuste para encontrar um conjunto de parâmetros numéricos de base que oferecesse um bom equilíbrio entre qualidade da solução e tempo de execução para N=10. Os parâmetros escolhidos para os experimentos seguintes foram:
+-   **Tamanho da População:** 100
+-   **Número de Gerações:** 500
+-   **Taxa de Mutação:** 5%
+-   **Elitismo:** `BestNElitism` com N=2 ou `PercentageElitism` com 10%.
+-   **Tamanho do Torneio:** 3
 
-3.  **Mutation:**
-    -   **Swap Mutation:** Two random genes (columns) in the chromosome have their values (rows) swapped. This maintains the original set of gene values.
-    -   **Random Resetting Mutation:** A random gene is selected, and its value is changed to a new random integer between `0` and `n-1`. This is a simple way to introduce new genetic material.
+---
 
-4.  **Elitism:**
-    -   **Best-N Elitism:** A fixed number `N` of the best individuals are carried over to the next generation, guaranteeing their survival.
-    -   **Percentage Elitism:** A percentage of the population is carried over. This scales the number of elites with the population size.
+## 3. Experimentação
 
-### 2.3. Part 0: Choice of Numerical Parameters
+Esta seção apresenta a análise dos resultados obtidos nos experimentos, com base nos gráficos e dados gerados. Todos os experimentos de comparação (Partes 1-4) foram executados 20 vezes para N=10.
 
-Before comparing the strategies, a baseline configuration was established by running a reference GA (Tournament, Single-Point, Swap, Best-N) with varying parameters for N=8. The goal was to find a set of values that provided a good balance between solution quality and execution time. The chosen baseline for the N=10 experiments is:
--   **Population Size:** 100
--   **Number of Generations:** 500
--   **Mutation Rate:** 5%
--   **Elitism:** Best 2 individuals
--   **Tournament Size (k):** 3
+### Parte 1: Variações do Parâmetro de Seleção
 
-This setup was found to consistently solve N=10 within a reasonable time frame, making it a fair baseline for comparing the different operator strategies.
+-   **Objetivo:** Comparar o desempenho da `TournamentSelection` contra a `RouletteWheelSelection`.
+-   **Análise dos Resultados:**
+    -   O gráfico de convergência demonstra claramente que a **Seleção por Torneio** atinge um fitness médio superior de forma muito mais rápida. A Seleção por Roleta apresenta uma convergência mais lenta e instável.
+    -   O boxplot do fitness final revela que ambas as estratégias são consistentes em atingir um fitness de 44.0. No entanto, a `TournamentSelection` foi a única que conseguiu encontrar a solução ótima (fitness 45.0) em algumas execuções, que aparecem como outliers superiores. A análise do arquivo de sumário confirma que a solução ótima foi encontrada em 3 das 20 execuções (15%) com Torneio, e em 0% com Roleta.
+-   **Conclusão:** A **`TournamentSelection` é superior**, pois converge mais rápido e é mais capaz de escapar de ótimos locais para encontrar a solução global.
 
-## 3. Experimentation
+### Parte 2: Variações do Parâmetro de Crossover
 
-This section presents the results of the experiments outlined in the assignment document. All comparison experiments were run for **N=10 Queens** over **20 independent runs**.
+-   **Objetivo:** Comparar o desempenho do `SinglePointCrossover` contra o `TwoPointCrossover`.
+-   **Análise dos Resultados:**
+    -   O gráfico de convergência mostra trajetórias muito similares para ambas as estratégias, sugerindo eficácia parecida no processo de melhoria.
+    -   O boxplot mostra que ambas as estratégias são extremamente consistentes, com quase todas as execuções terminando com fitness 44.0. Ambas encontraram a solução ótima (fitness 45.0) como um outlier. A análise do arquivo de sumário mostra que o `SinglePoint` encontrou a solução ótima em 2 das 20 execuções (10%) e o `TwoPoint` em 1 das 20 (5%).
+-   **Conclusão:** As duas estratégias apresentam **desempenho praticamente idêntico** e altamente consistente. Não há um vencedor claro, ambas são escolhas viáveis.
 
-### Part 1: Variações do Parâmetro de Seleção
+### Parte 3: Variações do Parâmetro de Elitismo
 
-**Goal:** Compare Tournament Selection vs. Roulette Wheel Selection.
+-   **Objetivo:** Comparar o `BestNElitism` (com N=2) contra o `PercentageElitism` (com 10%, resultando em 10 elites).
+-   **Análise dos Resultados:**
+    -   O gráfico de convergência indica que um elitismo maior (`Percentage`) leva a uma convergência inicial mais rápida.
+    -   O boxplot é a visualização mais interessante. O `PercentageElitism` é extremamente consistente, convergindo quase sempre para um fitness de 44.0. Já o `BestNElitism` produziu resultados mais variados, com uma dispersão maior, mas foi o único que conseguiu encontrar a solução ótima (outlier em 45.0). O sumário confirma que `BestN` encontrou a solução em 1 de 20 execuções (5%).
+-   **Conclusão:** Há um trade-off. O **`PercentageElitism` com mais elites é mais rápido e consistente** para atingir uma boa solução, mas o **`BestNElitism` com menos elites permitiu maior diversidade na população**, o que possibilitou encontrar a solução ótima. A escolha depende do objetivo: consistência ou chance de otimalidade.
 
-**Observations:**
-- The convergence plot shows that Tournament Selection consistently achieves higher average fitness much faster than Roulette Wheel.
-- The boxplot of the final best fitness across 20 runs confirms this. Tournament Selection not only reaches higher fitness values on average but also has less variance, indicating more reliable performance. Roulette Wheel struggles, often getting stuck in local optima.
+### Parte 4: Variações do Parâmetro de Mutação
 
-**Conclusion:** **Tournament Selection** is the superior strategy for this problem.
+-   **Objetivo:** Comparar a `SwapMutation` contra a `RandomResettingMutation`.
+-   **Análise dos Resultados:**
+    -   O gráfico de convergência mostra que a `RandomResettingMutation` leva a uma melhora mais rápida nas gerações iniciais.
+    -   O boxplot revela diferenças na consistência. A `SwapMutation` é muito consistente (linha em 44.0), enquanto a `RandomResettingMutation` produz resultados mais variados, com um fitness mediano superior. Nenhuma das duas encontrou a solução ótima de fitness 45 nas 20 execuções.
+-   **Conclusão:** A **`RandomResettingMutation` parece superior**, pois, embora menos consistente, atinge em média soluções finais de melhor qualidade e converge mais rápido. A `SwapMutation` parece levar o algoritmo a um ótimo local específico de forma mais previsível.
 
-*(Here you would embed the plots `part_1_selection_convergence.png` and `part_1_selection_best_fitness_boxplot.png`)*
+### Parte 5: Tamanho Máximo Viável do Problema
 
-### Part 2: Variações do Parâmetro de Crossover
+-   **Objetivo:** Analisar a escalabilidade de quatro variações "campeãs" do AG, medindo o tempo de execução com o aumento de `N`.
+-   **Análise dos Resultados:**
+    -   O gráfico de escalabilidade plota o tempo de execução em função do número de rainhas (N) para as quatro variações.
+    -   Observa-se um **crescimento exponencial no tempo de execução** para todas as variações, o que é esperado para um problema combinatório.
+    -   A variação `Champ_TwoPointCross` demonstrou ser a mais rápida, enquanto a `Champ_RandomResetMut` foi a que mais sofreu com o aumento de N, tornando-se a mais lenta.
+-   **Conclusão:** O framework implementado é eficaz para instâncias de até **N=25-30**, onde o tempo de execução ainda é gerenciável (na ordem de minutos). Acima disso, o tempo de execução cresce drasticamente, tornando o problema intratável para esta configuração de parâmetros. A escolha do operador de Crossover (`TwoPoint`) mostrou ter o maior impacto positivo na escalabilidade.
 
-**Goal:** Compare Single-Point Crossover vs. Two-Point Crossover.
-
-**Observations:**
-- The convergence plots for both strategies are very similar, indicating that both are effective.
-- The final fitness boxplot shows that Two-Point Crossover has a slight edge, with a slightly higher median fitness and a tighter distribution of results. This suggests it may be marginally more consistent at finding high-quality solutions.
-
-**Conclusion:** While both are viable, **Two-Point Crossover** demonstrates a marginal but consistent performance advantage.
-
-*(Here you would embed the plots `part_2_crossover_convergence.png` and `part_2_crossover_best_fitness_boxplot.png`)*
-
-### Parts 3 & 4: Variações de Elitismo e Mutação
-
-*(These sections would follow the same structure, presenting the analysis and concluding which strategy was superior based on the generated plots.)*
-
-### Part 5: Tamanho Máximo Viável do Problema
-
-**Goal:** Determine the scalability of a "champion" GA by increasing the problem size `n`.
-
-**Setup:** A champion algorithm was assembled using the winning strategies from Parts 1-4 (assumed to be Tournament, Two-Point, Swap, and Best-N). This GA was run for increasing values of `n`, and the average execution time was recorded.
-
-**Observations:**
-- The plot of Execution Time vs. N shows a clear exponential or super-polynomial increase in the time required to find a solution.
-- For small `n` (10-16), the algorithm is very fast.
-- As `n` approaches 25-30, the execution time increases dramatically. Running the algorithm for `n > 30` would likely take a very significant amount of time (many minutes to hours) with the current parameter set.
-
-**Conclusion:** The implemented Genetic Algorithm is effective for solving the N-Queens problem up to roughly **N=25-30** within a reasonable time frame (under a minute per run). Beyond this, the combinatorial explosion of the search space makes the problem significantly harder, requiring much larger populations or more generations, and thus more computational time.
-
-*(Here you would embed the plot `part_5_scalability_time_vs_n.png`)*
+---
 
 ## 4. Considerações Finais
 
-This project successfully demonstrated the application of Genetic Algorithms to the combinatorial N-Queens problem. The structured, modular implementation allowed for robust experimentation and comparison of different algorithmic strategies.
+O projeto demonstrou com sucesso a aplicação de Algoritmos Genéticos para o problema das N-Rainhas. A arquitetura modular permitiu uma experimentação robusta e a comparação detalhada de diferentes estratégias.
 
-The key takeaway is that the choice of GA operators significantly impacts performance. For this problem, a combination of **Tournament Selection, Two-Point Crossover, and a simple elitism model** proved to be the most effective.
+A principal conclusão é que a escolha dos operadores tem um impacto significativo no desempenho. Uma combinação de **`TournamentSelection`** (pela sua capacidade de encontrar a solução ótima) e **`TwoPointCrossover`** (pela sua eficiência em problemas maiores) parece ser a mais promissora.
 
-Future work could explore more advanced techniques, such as:
--   **Adaptive Mutation Rates:** Decreasing the mutation rate as the population converges to allow for fine-tuning.
--   **Different Chromosome Representations:** Using a permutation-based chromosome (where each row number appears exactly once) would change the problem space and necessitate different crossover operators (like PMX or Cycle Crossover), which could yield better results.
--   **Hybrid Algorithms:** Combining the GA with a local search algorithm (like hill climbing) to polish the solutions found in each generation.
+Como trabalhos futuros, poderiam ser exploradas técnicas mais avançadas, como taxas de mutação adaptativas (que diminuem à medida que a população converge), representações de cromossomos baseadas em permutação (evitando conflitos de linha e coluna por design) ou a hibridização do AG com um algoritmo de busca local para refinar as soluções encontradas a cada geração.
