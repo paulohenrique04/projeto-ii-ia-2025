@@ -1,7 +1,10 @@
+# ga/genetic_algorithm.py
+
 import random
 from typing import List, Optional
-from tqdm import tqdm
+from tqdm import tqdm  # Biblioteca para criar barras de progresso visuais.
 
+# Importa todas as classes e estratégias necessárias.
 from core.population import Population
 from core.individual import Individual
 from problem.n_queens import NQueensFitness
@@ -14,9 +17,9 @@ from utils.logger import Logger
 
 class GeneticAlgorithm:
     """
-    The main Genetic Algorithm engine.
-    It is configured with various strategies (selection, crossover, etc.)
-    to solve an optimization problem.
+    O motor principal do Algoritmo Genético.
+    Esta classe orquestra todo o processo evolutivo, utilizando as
+    estratégias (seleção, crossover, etc.) que foram injetadas nela.
     """
 
     def __init__(self,
@@ -25,6 +28,8 @@ class GeneticAlgorithm:
                  crossover_strategy: CrossoverStrategy,
                  mutation_strategy: MutationStrategy,
                  elitism_strategy: ElitismStrategy):
+        # O construtor recebe todas as estratégias como parâmetros (Injeção de Dependência).
+        # Isso torna o AG flexível e fácil de configurar com diferentes combinações.
         self.fitness_calculator = NQueensFitness(n_queens)
         self.selection_strategy = selection_strategy
         self.crossover_strategy = crossover_strategy
@@ -38,65 +43,77 @@ class GeneticAlgorithm:
             mutation_rate: float,
             logger: Optional[Logger] = None) -> Individual:
 
-        # 1. Initialization
+        # --- 1. INICIALIZAÇÃO ---
+        # Cria a população inicial com indivíduos aleatórios.
         population = Population.generate_initial_population(population_size, self.n_queens)
+        # Variável para armazenar a melhor solução encontrada até agora em todas as gerações.
         best_solution_so_far = None
 
-        # Main generational loop
+        # --- Laço Evolutivo Principal ---
+        # O loop executa por um número definido de gerações.
         for gen in range(num_generations):
-            # 2. Fitness Evaluation
+
+            # --- 2. AVALIAÇÃO DE FITNESS ---
+            # Calcula o fitness de cada indivíduo na população atual.
             for individual in population.individuals:
                 self.fitness_calculator.calculate(individual)
 
-            # Get stats for logging
+            # Encontra o melhor indivíduo da geração atual.
             best_in_gen = population.get_best_individual()
+
+            # Atualiza a melhor solução geral se o melhor da geração atual for superior.
             if best_solution_so_far is None or best_in_gen.fitness > best_solution_so_far.fitness:
                 best_solution_so_far = best_in_gen
 
-            # Log generation data
+            # Se um logger foi fornecido, registra as métricas da geração atual.
             if logger:
                 avg_fitness = sum(ind.fitness for ind in population.individuals) / population_size
                 worst_fitness = min(ind.fitness for ind in population.individuals)
-                logger.log_generation(
-                    gen, best_in_gen.fitness, avg_fitness, worst_fitness
-                )
+                logger.log_generation(gen, best_in_gen.fitness, avg_fitness, worst_fitness)
 
-            # 3. Check for termination condition (solution found)
+            # --- 3. VERIFICAÇÃO DA CONDIÇÃO DE PARADA ---
+            # Se a melhor solução encontrada atingiu o fitness máximo, o problema está resolvido.
             if best_solution_so_far.fitness == self.fitness_calculator.max_fitness:
-                # print(f"\nSolution found in generation {gen}!")
-                break
+                break  # Interrompe o loop de gerações.
 
-            # 4. Create the next generation
+            # --- 4. CRIAÇÃO DA PRÓXIMA GERAÇÃO ---
+            # Lista para armazenar os indivíduos da nova geração.
             new_population_individuals: List[Individual] = []
 
-            # 4a. Elitism
+            # 4a. Elitismo: Os melhores indivíduos passam diretamente para a próxima geração.
             elites = self.elitism_strategy.select_elites(population)
             new_population_individuals.extend(elites)
 
-            # 4b. Crossover and Mutation
-            num_offspring = population_size - len(elites)
+            # 4b. Seleção, Crossover e Mutação para preencher o resto da população.
+            num_offspring = population_size - len(elites)  # Número de "filhos" a serem criados.
 
-            # Ensure an even number of parents are selected for crossover
+            # Garante um número par de filhos para formar pares de pais.
             if num_offspring % 2 != 0:
-                num_offspring += 1  # We will generate one extra and discard later if needed
+                num_offspring += 1
 
+                # 4b.1. Seleção: Seleciona os pais da população atual.
             parents = self.selection_strategy.select(population, num_offspring)
 
+            # Loop para criar os filhos em pares.
             for i in range(0, num_offspring, 2):
                 parent1 = parents[i]
                 parent2 = parents[i + 1]
 
+                # 4b.2. Crossover: Gera dois filhos a partir dos dois pais.
                 child1, child2 = self.crossover_strategy.crossover(parent1, parent2)
 
+                # 4b.3. Mutação: Aplica a mutação nos filhos com base na taxa de mutação.
                 if random.random() < mutation_rate:
                     self.mutation_strategy.mutate(child1)
                 if random.random() < mutation_rate:
                     self.mutation_strategy.mutate(child2)
 
+                # Adiciona os novos filhos à lista da nova geração.
                 new_population_individuals.append(child1)
                 new_population_individuals.append(child2)
 
-            # Ensure population size is maintained
+            # Substitui a população antiga pela nova, garantindo o mesmo tamanho.
             population = Population(new_population_individuals[:population_size])
 
+        # Ao final de todas as gerações, retorna a melhor solução encontrada.
         return best_solution_so_far
