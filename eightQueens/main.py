@@ -321,7 +321,7 @@ def experiment_part_5_scalability():
     ]
 
     # Lista de tamanhos de problema (N) a serem testados.
-    n_values = [10, 15, 20, 25, 30, 35]
+    n_values = [10, 15, 20, 25, 30, 35, 40, 45]
     summary_results = []
     total_execution_time = 0
 
