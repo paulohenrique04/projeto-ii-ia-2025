@@ -57,6 +57,7 @@ def experiment_part_1_selection():
     # Define o nome da subpasta onde os resultados desta parte serão salvos.
     folder = "part_1_selection"
 
+    os.makedirs(os.path.join(RESULTS_DIR, folder), exist_ok=True)
     # 'configs' é uma lista de dicionários. Cada dicionário é uma "receita" para montar um AG completo.
     configs = [
         {
@@ -105,6 +106,8 @@ def experiment_part_2_crossover():
     print("\n--- Running Experiment Part 2: Crossover Strategies ---")
     folder = "part_2_crossover"
 
+    os.makedirs(os.path.join(RESULTS_DIR, folder), exist_ok=True)
+
     configs = [
         # A primeira configuração usa Crossover de Ponto Único.
         {
@@ -145,6 +148,8 @@ def experiment_part_3_elitism():
     print("\n--- Running Experiment Part 3: Elitism Strategies ---")
     folder = "part_3_elitism"
 
+    os.makedirs(os.path.join(RESULTS_DIR, folder), exist_ok=True)
+
     configs = [
         # A primeira configuração usa Elitismo por 'N' melhores.
         {
@@ -184,6 +189,8 @@ def experiment_part_4_mutation():
     """Executa a Parte 4: comparar duas estratégias de mutação."""
     print("\n--- Running Experiment Part 4: Mutation Strategies ---")
     folder = "part_4_mutation"
+
+    os.makedirs(os.path.join(RESULTS_DIR, folder), exist_ok=True)
 
     configs = [
         # A primeira configuração usa Mutação por Troca (Swap).
@@ -279,6 +286,9 @@ def experiment_part_5_scalability():
 
     # Define as 4 variações "campeãs", baseadas nos resultados prováveis das Partes 1-4.
     # Cada uma representa um algoritmo forte que se destacou em uma categoria.
+
+    os.makedirs(os.path.join(RESULTS_DIR, folder), exist_ok=True)
+
     champion_configs = [
         {
             "name": "Champ_TournamentSel",  # Esta é a configuração base, considerada forte.
