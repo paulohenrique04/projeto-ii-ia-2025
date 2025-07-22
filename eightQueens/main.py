@@ -33,6 +33,8 @@ def experiment_part_1_selection():
     print("\n--- Running Experiment Part 1: Selection Strategies ---")
     folder = "part_1_selection"
 
+    os.makedirs(os.path.join(RESULTS_DIR, folder), exist_ok=True)
+
     configs = [
         {
             "name": "Tournament",
@@ -70,6 +72,8 @@ def experiment_part_2_crossover():
     """Compares two crossover strategies."""
     print("\n--- Running Experiment Part 2: Crossover Strategies ---")
     folder = "part_2_crossover"
+
+    os.makedirs(os.path.join(RESULTS_DIR, folder), exist_ok=True)
 
     configs = [
         {
@@ -109,6 +113,8 @@ def experiment_part_3_elitism():
     print("\n--- Running Experiment Part 3: Elitism Strategies ---")
     folder = "part_3_elitism"
 
+    os.makedirs(os.path.join(RESULTS_DIR, folder), exist_ok=True)
+
     configs = [
         {
             "name": "BestN",
@@ -146,6 +152,8 @@ def experiment_part_4_mutation():
     """Compares two mutation strategies."""
     print("\n--- Running Experiment Part 4: Mutation Strategies ---")
     folder = "part_4_mutation"
+
+    os.makedirs(os.path.join(RESULTS_DIR, folder), exist_ok=True)
 
     configs = [
         {
@@ -227,6 +235,9 @@ def experiment_part_5_scalability():
 
     # Definindo as 4 variações "campeãs" com base nos resultados prováveis das Partes 1-4.
     # Cada variação é um algoritmo completo que se destacou em uma das categorias.
+
+    os.makedirs(os.path.join(RESULTS_DIR, folder), exist_ok=True)
+
     champion_configs = [
         {
             "name": "Champ_TournamentSel",
@@ -259,7 +270,7 @@ def experiment_part_5_scalability():
     ]
 
     # Valores de N maiores para garantir que o tempo de execução seja longo
-    n_values = [10, 15, 20, 25, 30, 35]
+    n_values = [10, 15, 20, 25, 30, 35, 40, 45]
     summary_results = []
     total_execution_time = 0
 
