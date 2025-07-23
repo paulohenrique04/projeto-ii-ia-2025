@@ -35,6 +35,7 @@ class TournamentSelection(SelectionStrategy):
         # Loop para selecionar a quantidade de pais necessária.
         for _ in range(num_parents):
             # Escolhe 'k' competidores aleatoriamente da população, sem repetição.
+            # Amostragem sem reposição
             tournament_contenders = random.sample(population.individuals, self.tournament_size)
             # O vencedor do torneio é o que tem o maior fitness.
             winner = max(tournament_contenders, key=lambda ind: ind.fitness)

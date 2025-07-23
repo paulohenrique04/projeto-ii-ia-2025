@@ -103,6 +103,8 @@ class GeneticAlgorithm:
                 child1, child2 = self.crossover_strategy.crossover(parent1, parent2)
 
                 # 4b.3. Mutação: Aplica a mutação nos filhos com base na taxa de mutação.
+                # random.random gere numero decimal aleatorio entre 0 e 1 onde todos tem
+                # a mesma chance de serem selecionados.
                 if random.random() < mutation_rate:
                     self.mutation_strategy.mutate(child1)
                 if random.random() < mutation_rate:

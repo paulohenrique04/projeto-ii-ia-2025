@@ -1,17 +1,12 @@
-# plotter.py
-
-# Importa as bibliotecas de visualização e manipulação de dados.
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-# Importa bibliotecas para manipulação de arquivos e diretórios.
 import os
 import glob
 
-# Define os nomes dos diretórios de resultados e de gráficos.
+# --- CONFIGURAÇÕES GLOBAIS ---
 RESULTS_DIR = "results"
 PLOTS_DIR = "plots"
-# Garante que o diretório para salvar os gráficos exista.
 os.makedirs(PLOTS_DIR, exist_ok=True)
 
 # Define um tema visual padrão para todos os gráficos, para consistência.
@@ -19,81 +14,96 @@ sns.set_theme(style="whitegrid")
 
 
 # --- FUNÇÕES DE PLOTAGEM ---
-# Cada função é responsável por criar um tipo específico de gráfico.
 
 def plot_convergence(exp_folder: str, title: str):
     """
-    Plota o gráfico de convergência (Melhor Fitness Médio x Geração).
-    Este gráfico mostra a velocidade com que cada estratégia melhora.
+    Plota a convergência da média de fitness ao longo das gerações
+    para as diferentes configurações de um experimento.
     """
-    # Cria a figura e os eixos para o gráfico.
     plt.figure(figsize=(12, 7))
-    # Monta o caminho para a pasta do experimento.
     path = os.path.join(RESULTS_DIR, exp_folder)
 
-    # Lê o arquivo de sumário para obter os nomes das configurações testadas.
-    summary_df = pd.read_csv(os.path.join(path, "summary.csv"))
+    summary_path = os.path.join(path, "summary.csv")
+    if not os.path.exists(summary_path):
+        print(f"Aviso: Arquivo de sumário não encontrado em {path}. Pulando gráfico de convergência.")
+        return
+
+    summary_df = pd.read_csv(summary_path)
     configs = summary_df['config_name'].unique()
 
-    # Itera sobre cada configuração (ex: 'Tournament', 'RouletteWheel').
     for config_name in configs:
-        # Encontra todos os arquivos de log detalhado para esta configuração.
-        run_files = glob.glob(os.path.join(path, f"run_*_{config_name}*.csv"))
+        run_files_pattern = os.path.join(path, f"run_*_{config_name}*.csv")
+        run_files = glob.glob(run_files_pattern)
 
-        # Se não houver arquivos de log, pula para a próxima configuração.
         if not run_files:
             continue
 
-        # Lê todos os arquivos CSV e os concatena em um único DataFrame.
         df_all_runs = pd.concat([pd.read_csv(f) for f in run_files])
-        # Agrupa os dados por geração e calcula a média do 'best_fitness' entre todas as execuções.
         mean_fitness = df_all_runs.groupby('generation')['best_fitness'].mean().reset_index()
 
-        # Plota a linha de convergência para esta configuração.
         sns.lineplot(data=mean_fitness, x='generation', y='best_fitness', label=config_name)
 
-    # Configura os títulos e rótulos do gráfico.
     plt.title(title, fontsize=16)
     plt.xlabel("Geração", fontsize=12)
     plt.ylabel("Melhor Fitness Médio", fontsize=12)
     plt.legend()
-    plt.tight_layout()  # Ajusta o layout para evitar sobreposição.
-    # Salva o gráfico como um arquivo de imagem.
+    plt.tight_layout()
     plot_path = os.path.join(PLOTS_DIR, f"{exp_folder}_convergence.png")
     plt.savefig(plot_path)
-    print(f"Gráfico de convergência salvo em: {plot_path}")
-    plt.close()  # Fecha a figura para liberar memória.
+    print(f"-> Gráfico de convergência salvo em: {plot_path}")
+    plt.close()
 
 
-def plot_summary_boxplot(exp_folder: str, metric: str, title: str):
+def plot_experiment_summary(exp_folder: str, exp_name: str):
     """
-    Cria um boxplot para comparar a distribuição dos resultados finais.
-    Este gráfico é excelente para analisar a consistência e a qualidade final das soluções.
+    Gera um conjunto de gráficos de resumo para um experimento,
+    analisando fitness e taxa de sucesso.
     """
     summary_path = os.path.join(RESULTS_DIR, exp_folder, "summary.csv")
     if not os.path.exists(summary_path):
+        print(f"Aviso: Arquivo de sumário para '{exp_name}' não encontrado. Pulando gráficos de resumo.")
         return
 
-    plt.figure(figsize=(10, 6))
-    # Lê o arquivo de sumário.
     df = pd.read_csv(summary_path)
-    # Cria o boxplot, comparando o 'metric' (ex: 'best_fitness') para cada 'config_name'.
-    sns.boxplot(data=df, x='config_name', y=metric)
 
-    plt.title(title, fontsize=16)
+    # --- GRÁFICO 1: Violino + Enxame (Distribuição do Fitness) ---
+    plt.figure(figsize=(10, 6))
+    sns.violinplot(data=df, x='config_name', y='best_fitness', inner=None, color=".8")
+    sns.swarmplot(data=df, x='config_name', y='best_fitness', size=5)
+    plt.title(f"Distribuição do Fitness Final: {exp_name}", fontsize=16)
     plt.xlabel("Configuração", fontsize=12)
-    plt.ylabel(metric.replace('_', ' ').title(), fontsize=12)
+    plt.ylabel("Melhor Fitness Final", fontsize=12)
     plt.tight_layout()
-    plot_path = os.path.join(PLOTS_DIR, f"{exp_folder}_{metric}_boxplot.png")
-    plt.savefig(plot_path)
-    print(f"Gráfico de boxplot salvo em: {plot_path}")
+    plot_path_violin = os.path.join(PLOTS_DIR, f"{exp_folder}_fitness_distribution.png")
+    plt.savefig(plot_path_violin)
+    print(f"-> Gráfico de distribuição de fitness salvo em: {plot_path_violin}")
+    plt.close()
+
+    # --- [BLOCO REMOVIDO] O código que gerava o boxplot de tempo de execução foi removido daqui. ---
+
+    # --- GRÁFICO 2: Barras (Taxa de Sucesso) ---
+    success_rate = df.groupby('config_name')['solution_found'].mean().reset_index()
+    success_rate['solution_found'] *= 100
+
+    plt.figure(figsize=(10, 6))
+    barplot = sns.barplot(data=success_rate, x='config_name', y='solution_found')
+    for p in barplot.patches:
+        barplot.annotate(f"{p.get_height():.1f}%", (p.get_x() + p.get_width() / 2., p.get_height()),
+                         ha='center', va='center', xytext=(0, 9), textcoords='offset points')
+    plt.title(f"Taxa de Sucesso (Solução Ótima): {exp_name}", fontsize=16)
+    plt.xlabel("Configuração", fontsize=12)
+    plt.ylabel("Taxa de Sucesso (%)", fontsize=12)
+    plt.ylim(0, 105)
+    plt.tight_layout()
+    plot_path_success = os.path.join(PLOTS_DIR, f"{exp_folder}_success_rate.png")
+    plt.savefig(plot_path_success)
+    print(f"-> Gráfico de taxa de sucesso salvo em: {plot_path_success}")
     plt.close()
 
 
 def plot_scalability():
     """
-    Plota o gráfico de escalabilidade (Tempo de Execução x Tamanho do Problema).
-    Mostra como cada algoritmo campeão se comporta com o aumento da complexidade.
+    Plota o tempo de execução vs. tamanho do problema (N) para o experimento de escalabilidade.
     """
     exp_folder = "part_5_scalability"
     summary_path = os.path.join(RESULTS_DIR, exp_folder, "summary.csv")
@@ -103,10 +113,7 @@ def plot_scalability():
     df = pd.read_csv(summary_path)
 
     plt.figure(figsize=(12, 7))
-    # Cria um gráfico de linha. O parâmetro 'hue' cria uma linha de cor diferente
-    # para cada 'config_name', permitindo a comparação direta.
     sns.lineplot(data=df, x='n_queens', y='execution_time', hue='config_name', marker='o', errorbar='sd')
-
     plt.title("Escalabilidade do AG: Tempo de Execução vs. Tamanho do Problema (N)", fontsize=16)
     plt.xlabel("Número de Rainhas (N)", fontsize=12)
     plt.ylabel("Tempo Médio de Execução (segundos)", fontsize=12)
@@ -115,7 +122,45 @@ def plot_scalability():
     plt.tight_layout()
     plot_path = os.path.join(PLOTS_DIR, f"{exp_folder}_time_vs_n.png")
     plt.savefig(plot_path)
-    print(f"Gráfico de escalabilidade salvo em: {plot_path}")
+    print(f"-> Gráfico de escalabilidade salvo em: {plot_path}")
+    plt.close()
+
+
+def plot_total_execution_time():
+    """
+    Calcula e plota o tempo de execução total para cada estratégia campeã
+    e o tempo total geral do experimento de escalabilidade.
+    """
+    exp_folder = "part_5_scalability"
+    summary_path = os.path.join(RESULTS_DIR, exp_folder, "summary.csv")
+    if not os.path.exists(summary_path):
+        return
+
+    df = pd.read_csv(summary_path)
+
+    total_time_per_strategy = df.groupby('config_name')['execution_time'].sum()
+    grand_total_time = total_time_per_strategy.sum()
+    total_time_per_strategy['Total Geral'] = grand_total_time
+    total_time_per_strategy_min = total_time_per_strategy / 60
+
+    plot_data = total_time_per_strategy_min.reset_index()
+    plot_data.columns = ['Estratégia', 'Tempo Total (minutos)']
+
+    plt.figure(figsize=(12, 7))
+    barplot = sns.barplot(data=plot_data, x='Estratégia', y='Tempo Total (minutos)')
+
+    for p in barplot.patches:
+        barplot.annotate(f"{p.get_height():.2f} min", (p.get_x() + p.get_width() / 2., p.get_height()),
+                         ha='center', va='center', xytext=(0, 9), textcoords='offset points')
+
+    plt.title("Tempo de Execução Total do Experimento de Escalabilidade", fontsize=16)
+    plt.xlabel("Estratégia Campeã", fontsize=12)
+    plt.ylabel("Tempo de Execução Total (minutos)", fontsize=12)
+    plt.xticks(rotation=15)
+    plt.tight_layout()
+    plot_path = os.path.join(PLOTS_DIR, f"{exp_folder}_total_time.png")
+    plt.savefig(plot_path)
+    print(f"-> Gráfico de tempo total de execução salvo em: {plot_path}")
     plt.close()
 
 
@@ -123,24 +168,29 @@ def plot_scalability():
 if __name__ == "__main__":
     print("--- Gerando Gráficos para os Experimentos ---")
 
-    # Chama cada função de plotagem para cada parte do experimento.
-    # Plot Part 1 - Seleção
+    # Parte 1 - Seleção
+    print("\nAnalisando Experimento 1: Estratégias de Seleção")
     plot_convergence("part_1_selection", "Convergência: Estratégias de Seleção")
-    plot_summary_boxplot("part_1_selection", "best_fitness", "Fitness Final: Estratégias de Seleção (20 Execuções)")
+    plot_experiment_summary("part_1_selection", "Estratégias de Seleção")
 
-    # Plot Part 2 - Crossover
+    # Parte 2 - Crossover
+    print("\nAnalisando Experimento 2: Estratégias de Crossover")
     plot_convergence("part_2_crossover", "Convergência: Estratégias de Crossover")
-    plot_summary_boxplot("part_2_crossover", "best_fitness", "Fitness Final: Estratégias de Crossover (20 Execuções)")
+    plot_experiment_summary("part_2_crossover", "Estratégias de Crossover")
 
-    # Plot Part 3 - Elitismo
+    # Parte 3 - Elitismo
+    print("\nAnalisando Experimento 3: Estratégias de Elitismo")
     plot_convergence("part_3_elitism", "Convergência: Estratégias de Elitismo")
-    plot_summary_boxplot("part_3_elitism", "best_fitness", "Fitness Final: Estratégias de Elitismo (20 Execuções)")
+    plot_experiment_summary("part_3_elitism", "Estratégias de Elitismo")
 
-    # Plot Part 4 - Mutação
+    # Parte 4 - Mutação
+    print("\nAnalisando Experimento 4: Estratégias de Mutação")
     plot_convergence("part_4_mutation", "Convergência: Estratégias de Mutação")
-    plot_summary_boxplot("part_4_mutation", "best_fitness", "Fitness Final: Estratégias de Mutação (20 Execuções)")
+    plot_experiment_summary("part_4_mutation", "Estratégias de Mutação")
 
-    # Plot Part 5 - Escalabilidade
+    # Parte 5 - Escalabilidade
+    print("\nAnalisando Experimento 5: Escalabilidade")
     plot_scalability()
+    plot_total_execution_time()
 
     print("\nTodos os gráficos foram gerados. Verifique a pasta 'plots'.")
