@@ -15,7 +15,7 @@ Esta seção detalha os aspectos técnicos da implementação do projeto, as fer
 -   **Linguagem:** Python 3.10
 -   **Bibliotecas Principais:**
     -   `pandas`: Essencial para a manipulação de dados, leitura e escrita dos arquivos `.csv` contendo os resultados dos experimentos.
-    -   `matplotlib` & `seaborn`: Utilizadas para a geração de gráficos estatísticos de alta qualidade, como os de convergência e os boxplots, permitindo uma análise visual robusta.
+    -   `matplotlib` & `seaborn`: Utilizadas para a geração de gráficos estatísticos de alta qualidade, como os de convergência e os de distribuição, permitindo uma análise visual robusta.
     -   `tqdm`: Fornece barras de progresso interativas no terminal, melhorando a experiência do usuário durante as execuções, que podem ser demoradas.
 
 ### 1.2. Arquitetura do Código e Design
@@ -38,7 +38,7 @@ Esta seção justifica as escolhas de design para os componentes do Algoritmo Ge
 
 -   **Representação:** Um indivíduo (cromossomo) é representado por um vetor de `n` inteiros. O índice `i` do vetor representa a coluna, e o valor `s[i]` representa a linha onde a rainha daquela coluna está posicionada. Esta representação já previne ataques verticais.
 -   **Função de Fitness:** O objetivo é minimizar o número de pares de rainhas em conflito. Como os AGs canonicamente maximizam o fitness, a função foi definida para **maximizar o número de pares de rainhas que não se atacam**. O número total de pares em um tabuleiro `n x n` é $N_{total} = \frac{n(n-1)}{2}$. A função de fitness calcula o número de ataques, $N_{ataques}$, e o fitness final é:
-    $$ \text{fitness} = N_{total} - N_{ataques} $$
+    $$\text{fitness} = N_{total} - N_{ataques}$$
     Uma solução perfeita para N=10 atinge o fitness máximo de 45.
 
 ### 2.2. Variações de Operadores e Combinações
@@ -46,27 +46,9 @@ Esta seção justifica as escolhas de design para os componentes do Algoritmo Ge
 O design flexível permite 16 combinações de algoritmos distintas a partir dos operadores implementados.
 
 -   **Seleção (2):** `TournamentSelection`, `RouletteWheelSelection`.
--   **Cruzamento (2):** `SinglePointCrossover`, `TwoPointCrossover`.
+-   **Cruzamento (2):** `UniformCrossover`, `TwoPointCrossover`.
 -   **Mutação (2):** `SwapMutation`, `RandomResettingMutation`.
 -   **Elitismo (2):** `BestNElitism`, `PercentageElitism`.
-
-O conjunto completo dos 16 algoritmos é:
-1.  (TournamentSelection, SinglePointCrossover, SwapMutation, BestNElitism)
-2.  (TournamentSelection, SinglePointCrossover, SwapMutation, PercentageElitism)
-3.  (TournamentSelection, SinglePointCrossover, RandomResettingMutation, BestNElitism)
-4.  (TournamentSelection, SinglePointCrossover, RandomResettingMutation, PercentageElitism)
-5.  (TournamentSelection, TwoPointCrossover, SwapMutation, BestNElitism)
-6.  (TournamentSelection, TwoPointCrossover, SwapMutation, PercentageElitism)
-7.  (TournamentSelection, TwoPointCrossover, RandomResettingMutation, BestNElitism)
-8.  (TournamentSelection, TwoPointCrossover, RandomResettingMutation, PercentageElitism)
-9.  (RouletteWheelSelection, SinglePointCrossover, SwapMutation, BestNElitism)
-10. (RouletteWheelSelection, SinglePointCrossover, SwapMutation, PercentageElitism)
-11. (RouletteWheelSelection, SinglePointCrossover, RandomResettingMutation, BestNElitism)
-12. (RouletteWheelSelection, SinglePointCrossover, RandomResettingMutation, PercentageElitism)
-13. (RouletteWheelSelection, TwoPointCrossover, SwapMutation, BestNElitism)
-14. (RouletteWheelSelection, TwoPointCrossover, SwapMutation, PercentageElitism)
-15. (RouletteWheelSelection, TwoPointCrossover, RandomResettingMutation, BestNElitism)
-16. (RouletteWheelSelection, TwoPointCrossover, RandomResettingMutation, PercentageElitism)
 
 ### 2.3. Parte 0: Escolha de Parâmetros Numéricos
 
@@ -77,6 +59,26 @@ Antes dos experimentos comparativos, foi realizada uma etapa de ajuste para enco
 -   **Elitismo:** `BestNElitism` com N=2 ou `PercentageElitism` com 10%.
 -   **Tamanho do Torneio:** 3
 
+### 2.4. Justificativa das Estratégias Utilizadas
+
+A escolha das estratégias para cada operador genético foi baseada em abordagens clássicas e eficientes, amplamente documentadas na literatura, para permitir uma comparação clara entre diferentes mecanismos de pressão seletiva e exploração do espaço de busca.
+
+-   **Seleção:**
+    -   **`RouletteWheelSelection` (Roleta):** Foi escolhida por ser uma das técnicas de seleção mais fundamentais. Ela serve como um excelente baseline, mas pode sofrer de convergência prematura.
+    -   **`TournamentSelection` (Torneio):** Foi escolhida como uma alternativa robusta à roleta, que reduz a chance de domínio por um único indivíduo e permite um controle mais fino da pressão seletiva.
+
+-   **Cruzamento (Crossover):**
+    -   **`UniformCrossover` (Uniforme):** Foi escolhido por promover uma alta taxa de mistura entre os genes dos pais, o que pode ser útil para escapar de ótimos locais.
+    -   **`TwoPointCrossover` (Dois Pontos):** Foi escolhido para testar a hipótese de que preservar blocos de construção (schemas) menores e mais coesos pode ser benéfico.
+
+-   **Mutação:**
+    -   **`SwapMutation` (Troca):** Esta estratégia foi escolhida por ser uma forma simples de mutação que reordena a informação genética existente sem introduzir novos valores.
+    -   **`RandomResettingMutation` (Reset Aleatório):** Foi escolhida como uma alternativa que introduz maior diversidade na população, permitindo que o algoritmo explore novas áreas do espaço de busca.
+
+-   **Elitismo:**
+    -   **`BestNElitism` (Melhores N):** Implementa o conceito de elitismo em sua forma mais pura: a garantia de que os melhores indivíduos não serão perdidos.
+    -   **`PercentageElitism` (Percentual):** Foi escolhido para testar uma forma de elitismo que escala com o tamanho da população, aumentando a pressão seletiva.
+
 ---
 
 ## 3. Experimentação
@@ -85,9 +87,8 @@ Esta seção apresenta a análise dos resultados obtidos nos experimentos, com b
 
 ### Parte 1: Variações do Parâmetro de Seleção
 
--   **Objetivo:** Comparar o desempenho da `TournamentSelection` contra a `RouletteWheelSelection`.
--   **Análise dos Resultados:** O gráfico de convergência mostra que a `TournamentSelection` é significativamente mais eficiente, atingindo um fitness médio superior em muito menos gerações. A análise de distribuição e taxa de sucesso confirma essa superioridade: a `TournamentSelection` foi a única capaz de encontrar a solução ótima (fitness 45), atingindo uma taxa de sucesso de 15%, enquanto a `RouletteWheelSelection` nunca obteve êxito.
--   **Conclusão:** A **`TournamentSelection` é a estratégia vencedora clara**, sendo mais rápida, eficiente e robusta.
+-   **Análise dos Resultados:** O gráfico de convergência mostra que a `TournamentSelection` é mais eficiente, atingindo um fitness médio superior em menos gerações. A análise da taxa de sucesso confirma essa superioridade: a `TournamentSelection` encontrou a solução ótima com o dobro da frequência da `RouletteWheelSelection` (10% vs 5%).
+-   **Conclusão:** A **`TournamentSelection` é a estratégia vencedora clara**, sendo mais rápida e robusta.
 
 ![Gráfico de Convergência para Estratégias de Seleção](plots/part_1_selection_convergence.png)
 ![Gráfico de Distribuição de Fitness para Estratégias de Seleção](plots/part_1_selection_fitness_distribution.png)
@@ -95,9 +96,8 @@ Esta seção apresenta a análise dos resultados obtidos nos experimentos, com b
 
 ### Parte 2: Variações do Parâmetro de Crossover
 
--   **Objetivo:** Comparar o desempenho do `SinglePointCrossover` contra o `TwoPointCrossover`.
--   **Análise dos Resultados:** Os gráficos de convergência e distribuição de fitness mostram que ambas as estratégias são quase idênticas em performance. Ambas são rápidas, consistentes em atingir soluções de alta qualidade (fitness 44) e capazes de encontrar a solução ótima esporadicamente. A taxa de sucesso apresentou uma vantagem marginal para o `SinglePoint` (10% vs 5%), mas a diferença é muito pequena para ser conclusiva.
--   **Conclusão:** Ambas as estratégias de crossover são **altamente eficazes e apresentam desempenho muito similar**. São escolhas robustas e intercambiáveis para este problema.
+-   **Análise dos Resultados:** Os gráficos de convergência e distribuição de fitness mostram que ambas as estratégias (`Uniform` e `TwoPoint`) são quase idênticas em performance, sendo rápidas e consistentes. A taxa de sucesso apresentou uma vantagem para o `TwoPoint` (10% vs 5%).
+-   **Conclusão:** Ambas as estratégias são eficazes, com uma **ligeira vantagem em robustez para o `TwoPointCrossover`**.
 
 ![Gráfico de Convergência para Estratégias de Crossover](plots/part_2_crossover_convergence.png)
 ![Gráfico de Distribuição de Fitness para Estratégias de Crossover](plots/part_2_crossover_fitness_distribution.png)
@@ -105,9 +105,8 @@ Esta seção apresenta a análise dos resultados obtidos nos experimentos, com b
 
 ### Parte 3: Variações do Parâmetro de Elitismo
 
--   **Objetivo:** Comparar o `BestNElitism` (com N=2) contra o `PercentageElitism` (com 10%).
--   **Análise dos Resultados:** Os gráficos revelam um claro trade-off. O `PercentageElitism`, por preservar mais elites, converge mais rápido e é extremamente consistente em atingir uma boa solução (fitness 44), mas nunca encontrou a solução ótima (taxa de sucesso de 0%). O `BestNElitism`, com menos elites, permitiu maior diversidade genética; embora menos consistente, essa diversidade permitiu que a solução ótima fosse encontrada em 5% das execuções.
--   **Conclusão:** Não há um vencedor absoluto. A escolha **depende do objetivo**: `PercentageElitism` para **consistência e velocidade**, `BestNElitism` para maximizar a **chance de encontrar a solução perfeita**.
+-   **Análise dos Resultados:** O `PercentageElitism` (com mais elites) converge mais rápido e é mais consistente. Além disso, foi o único que conseguiu encontrar a solução ótima, com uma taxa de sucesso de 5%, enquanto o `BestNElitism` não obteve sucesso.
+-   **Conclusão:** A estratégia **`PercentageElitism` se mostrou superior**, pois não só foi mais rápida, mas também a única capaz de encontrar a solução ótima, indicando que uma maior pressão seletiva foi benéfica nesta série de testes.
 
 ![Gráfico de Convergência para Estratégias de Elitismo](plots/part_3_elitism_convergence.png)
 ![Gráfico de Distribuição de Fitness para Estratégias de Elitismo](plots/part_3_elitism_fitness_distribution.png)
@@ -115,9 +114,8 @@ Esta seção apresenta a análise dos resultados obtidos nos experimentos, com b
 
 ### Parte 4: Variações do Parâmetro de Mutação
 
--   **Objetivo:** Comparar a `SwapMutation` com a `RandomResettingMutation`.
--   **Análise dos Resultados:** A `RandomResettingMutation` demonstrou uma convergência ligeiramente mais rápida e atingiu um fitness mediano um pouco superior. A `SwapMutation` foi mais consistente, convergindo para o mesmo resultado (fitness 44) com mais frequência. No entanto, nenhuma das estratégias conseguiu encontrar a solução ótima nesta série de execuções (taxa de sucesso de 0% para ambas).
--   **Conclusão:** A **`RandomResettingMutation` apresentou uma pequena vantagem** em performance geral. Contudo, as estratégias de mutação pareceram ter um impacto menor na busca pela solução ótima em comparação com os outros operadores.
+-   **Análise dos Resultados:** A `RandomResettingMutation` demonstrou uma convergência ligeiramente mais rápida e atingiu um platô de fitness médio superior. Mais importante, sua taxa de sucesso foi de 30%, superando a `SwapMutation` que obteve 20%.
+-   **Conclusão:** A **`RandomResettingMutation` é a estratégia vencedora**, sendo mais eficiente e significativamente mais eficaz em encontrar a solução ótima.
 
 ![Gráfico de Convergência para Estratégias de Mutação](plots/part_4_mutation_convergence.png)
 ![Gráfico de Distribuição de Fitness para Estratégias de Mutação](plots/part_4_mutation_fitness_distribution.png)
@@ -125,9 +123,8 @@ Esta seção apresenta a análise dos resultados obtidos nos experimentos, com b
 
 ### Parte 5: Tamanho Máximo Viável do Problema
 
--   **Objetivo:** Analisar a escalabilidade de quatro variações "campeãs" do AG com o aumento do tamanho do problema (N).
--   **Análise dos Resultados:** O gráfico de escalabilidade (Tempo vs. N) mostra um aumento exponencial no tempo de execução para todas as variações, confirmando a dificuldade combinatória do problema. O gráfico de tempo total resume o custo computacional, destacando a variação com `TwoPointCrossover` como a mais eficiente no geral, enquanto a variação com `RandomResettingMutation` foi a mais lenta.
--   **Conclusão:** O framework é eficaz para instâncias de até **N=30-35**, onde o tempo de execução é gerenciável. Acima disso, o custo computacional torna-se proibitivo. Dentre as estratégias campeãs, a que utiliza o **`TwoPointCrossover` demonstrou ser a mais escalável**.
+-   **Análise dos Resultados:** O gráfico de escalabilidade (Tempo vs. N) mostra um esperado aumento exponencial no tempo de execução para todas as variações. O gráfico de tempo total resume o custo computacional, destacando a variação com `TwoPointCrossover` como a mais eficiente no geral, enquanto a com `RandomResetMut` foi a mais lenta. O tempo total do experimento foi de 10.51 minutos, atendendo ao requisito do projeto.
+-   **Conclusão:** O framework é eficaz para instâncias de até **N=35-40**. Dentre as estratégias campeãs, a que utiliza o **`TwoPointCrossover` demonstrou ser a mais escalável**.
 
 ![Gráfico de Escalabilidade (Tempo vs N)](plots/part_5_scalability_time_vs_n.png)
 ![Gráfico de Tempo Total de Execução da Parte 5](plots/part_5_scalability_total_time.png)
@@ -138,6 +135,10 @@ Esta seção apresenta a análise dos resultados obtidos nos experimentos, com b
 
 O projeto demonstrou com sucesso a aplicação de Algoritmos Genéticos para o problema das N-Rainhas. A arquitetura modular permitiu uma experimentação robusta e a comparação detalhada de diferentes estratégias, gerando conclusões suportadas por evidências gráficas e de dados.
 
-A principal conclusão é que a escolha dos operadores tem um impacto significativo no desempenho. Uma combinação de **`TournamentSelection`** (pela sua robustez em encontrar a solução ótima) e **`TwoPointCrossover`** (pela sua eficiência em problemas maiores) parece ser a mais promissora. A análise de elitismo revelou um importante trade-off entre a velocidade de convergência e a diversidade genética necessária para evitar ótimos locais.
+A principal conclusão é que a escolha dos operadores tem um impacto significativo no desempenho. Uma combinação de **`TournamentSelection`** (pela sua eficiência), **`TwoPointCrossover`** (pela sua escalabilidade) e **`RandomResettingMutation`** (pela sua alta taxa de sucesso) parece ser a mais promissora. A análise de elitismo mostrou que uma maior pressão seletiva (`PercentageElitism`) foi benéfica nesta série de testes.
 
 Como trabalhos futuros, poderiam ser exploradas técnicas mais avançadas, como taxas de mutação adaptativas, representações de cromossomos baseadas em permutação ou a hibridização do AG com um algoritmo de busca local para refinar as soluções encontradas a cada geração.
+
+## 5. Referências
+
+* Russell, S., & Norvig, P. (2010). *Artificial Intelligence: A Modern Approach* (3rd ed.). Prentice Hall.

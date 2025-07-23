@@ -12,23 +12,38 @@ class CrossoverStrategy(ABC):
         pass
 
 
-class SinglePointCrossover(CrossoverStrategy):
+class UniformCrossover(CrossoverStrategy):
     """
-    Performs single-point crossover between two parents.
+    Implementa o Crossover Uniforme.
+    Para cada gene, uma escolha aleatória (como jogar uma moeda) é feita
+    para decidir qual pai contribuirá com seu gene para cada filho.
+    Isso resulta em uma mistura mais granular do material genético.
     """
-
-    def __init__(self):
-        self.name = "SinglePoint"
+    def __init__(self, mixing_ratio: float = 0.5):
+        # mixing_ratio é a probabilidade de um gene vir do pai1. 0.5 significa 50% de chance.
+        if not 0.0 <= mixing_ratio <= 1.0:
+            raise ValueError("A taxa de mistura (mixing_ratio) deve estar entre 0.0 e 1.0.")
+        self.mixing_ratio = mixing_ratio
+        self.name = "Uniform"
 
     def crossover(self, parent1: Individual, parent2: Individual) -> Tuple[Individual, Individual]:
         size = len(parent1)
-        if size < 2:
-            return parent1, parent2
+        child1_chromosome = []
+        child2_chromosome = []
 
-        crossover_point = random.randint(1, size - 1)
-        child1_chromosome = parent1.chromosome[:crossover_point] + parent2.chromosome[crossover_point:]
-        child2_chromosome = parent2.chromosome[:crossover_point] + parent1.chromosome[crossover_point:]
+        # Itera por cada gene do cromossomo.
+        for i in range(size):
+            # "Joga a moeda".
+            if random.random() < self.mixing_ratio:
+                # Se o resultado for menor que a taxa, o filho1 herda do pai1 e o filho2 do pai2.
+                child1_chromosome.append(parent1.chromosome[i])
+                child2_chromosome.append(parent2.chromosome[i])
+            else:
+                # Caso contrário, eles herdam dos pais opostos.
+                child1_chromosome.append(parent2.chromosome[i])
+                child2_chromosome.append(parent1.chromosome[i])
 
+        # Retorna os dois novos indivíduos criados.
         return Individual(child1_chromosome), Individual(child2_chromosome)
 
 

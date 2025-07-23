@@ -8,7 +8,8 @@ from utils.logger import Logger
 
 # Import Strategies
 from ga.strategies.selection import TournamentSelection, RouletteWheelSelection
-from ga.strategies.crossover import SinglePointCrossover, TwoPointCrossover
+# A importação foi alterada aqui:
+from ga.strategies.crossover import UniformCrossover, TwoPointCrossover
 from ga.strategies.mutation import SwapMutation, RandomResettingMutation
 from ga.strategies.elitism import BestNElitism, PercentageElitism
 
@@ -32,7 +33,6 @@ def experiment_part_1_selection():
     """Compares two selection strategies."""
     print("\n--- Running Experiment Part 1: Selection Strategies ---")
     folder = "part_1_selection"
-
     os.makedirs(os.path.join(RESULTS_DIR, folder), exist_ok=True)
 
     configs = [
@@ -41,7 +41,8 @@ def experiment_part_1_selection():
             "folder": folder,
             "params": BASE_PARAMS,
             "selection": TournamentSelection(BASE_PARAMS["tournament_k"]),
-            "crossover": SinglePointCrossover(),
+            # Alterado aqui para usar UniformCrossover como baseline
+            "crossover": UniformCrossover(),
             "mutation": SwapMutation(),
             "elitism": BestNElitism(BASE_PARAMS["elitism_n"]),
         },
@@ -50,7 +51,8 @@ def experiment_part_1_selection():
             "folder": folder,
             "params": BASE_PARAMS,
             "selection": RouletteWheelSelection(),
-            "crossover": SinglePointCrossover(),
+            # Alterado aqui
+            "crossover": UniformCrossover(),
             "mutation": SwapMutation(),
             "elitism": BestNElitism(BASE_PARAMS["elitism_n"]),
         }
@@ -72,16 +74,16 @@ def experiment_part_2_crossover():
     """Compares two crossover strategies."""
     print("\n--- Running Experiment Part 2: Crossover Strategies ---")
     folder = "part_2_crossover"
-
     os.makedirs(os.path.join(RESULTS_DIR, folder), exist_ok=True)
 
     configs = [
         {
-            "name": "SinglePoint",
+            # A primeira configuração agora testa o UniformCrossover
+            "name": "Uniform",
             "folder": folder,
             "params": BASE_PARAMS,
             "selection": TournamentSelection(BASE_PARAMS["tournament_k"]),
-            "crossover": SinglePointCrossover(),
+            "crossover": UniformCrossover(),
             "mutation": SwapMutation(),
             "elitism": BestNElitism(BASE_PARAMS["elitism_n"]),
         },
@@ -112,7 +114,6 @@ def experiment_part_3_elitism():
     """Compares two elitism strategies."""
     print("\n--- Running Experiment Part 3: Elitism Strategies ---")
     folder = "part_3_elitism"
-
     os.makedirs(os.path.join(RESULTS_DIR, folder), exist_ok=True)
 
     configs = [
@@ -121,7 +122,8 @@ def experiment_part_3_elitism():
             "folder": folder,
             "params": BASE_PARAMS,
             "selection": TournamentSelection(BASE_PARAMS["tournament_k"]),
-            "crossover": SinglePointCrossover(),
+            # Alterado aqui
+            "crossover": UniformCrossover(),
             "mutation": SwapMutation(),
             "elitism": BestNElitism(BASE_PARAMS["elitism_n"]),
         },
@@ -130,7 +132,8 @@ def experiment_part_3_elitism():
             "folder": folder,
             "params": BASE_PARAMS,
             "selection": TournamentSelection(BASE_PARAMS["tournament_k"]),
-            "crossover": SinglePointCrossover(),
+            # Alterado aqui
+            "crossover": UniformCrossover(),
             "mutation": SwapMutation(),
             "elitism": PercentageElitism(BASE_PARAMS["elitism_percentage"]),
         }
@@ -152,7 +155,6 @@ def experiment_part_4_mutation():
     """Compares two mutation strategies."""
     print("\n--- Running Experiment Part 4: Mutation Strategies ---")
     folder = "part_4_mutation"
-
     os.makedirs(os.path.join(RESULTS_DIR, folder), exist_ok=True)
 
     configs = [
@@ -161,7 +163,8 @@ def experiment_part_4_mutation():
             "folder": folder,
             "params": BASE_PARAMS,
             "selection": TournamentSelection(BASE_PARAMS["tournament_k"]),
-            "crossover": SinglePointCrossover(),
+            # Alterado aqui
+            "crossover": UniformCrossover(),
             "mutation": SwapMutation(),
             "elitism": BestNElitism(BASE_PARAMS["elitism_n"]),
         },
@@ -170,7 +173,8 @@ def experiment_part_4_mutation():
             "folder": folder,
             "params": BASE_PARAMS,
             "selection": TournamentSelection(BASE_PARAMS["tournament_k"]),
-            "crossover": SinglePointCrossover(),
+            # Alterado aqui
+            "crossover": UniformCrossover(),
             "mutation": RandomResettingMutation(),
             "elitism": BestNElitism(BASE_PARAMS["elitism_n"]),
         }
@@ -190,7 +194,6 @@ def experiment_part_4_mutation():
 
 def run_single_experiment(config: dict, run_id: int, show_progress=False):
     """Helper to run one instance of a GA configuration."""
-    # Note: Added 'show_progress' to disable logging inside this specific function
     logger = Logger(
         os.path.join(
             RESULTS_DIR, config["folder"], f"run_{run_id}_{config['name']}_n{config['params']['n_queens']}.csv"
@@ -232,17 +235,14 @@ def experiment_part_5_scalability():
     """
     print("\n--- Running Experiment Part 5: Scalability (Problem Size) ---")
     folder = "part_5_scalability"
-
-    # Definindo as 4 variações "campeãs" com base nos resultados prováveis das Partes 1-4.
-    # Cada variação é um algoritmo completo que se destacou em uma das categorias.
-
     os.makedirs(os.path.join(RESULTS_DIR, folder), exist_ok=True)
 
     champion_configs = [
         {
             "name": "Champ_TournamentSel",
             "selection": TournamentSelection(BASE_PARAMS["tournament_k"]),
-            "crossover": SinglePointCrossover(),
+            # Alterado aqui
+            "crossover": UniformCrossover(),
             "mutation": SwapMutation(),
             "elitism": BestNElitism(BASE_PARAMS["elitism_n"]),
         },
@@ -256,34 +256,32 @@ def experiment_part_5_scalability():
         {
             "name": "Champ_RandomResetMut",
             "selection": TournamentSelection(BASE_PARAMS["tournament_k"]),
-            "crossover": SinglePointCrossover(),
+            # Alterado aqui
+            "crossover": UniformCrossover(),
             "mutation": RandomResettingMutation(),
             "elitism": BestNElitism(BASE_PARAMS["elitism_n"]),
         },
         {
             "name": "Champ_PercentageElit",
             "selection": TournamentSelection(BASE_PARAMS["tournament_k"]),
-            "crossover": SinglePointCrossover(),
+            # Alterado aqui
+            "crossover": UniformCrossover(),
             "mutation": SwapMutation(),
             "elitism": PercentageElitism(BASE_PARAMS["elitism_percentage"]),
         }
     ]
 
-    # Valores de N maiores para garantir que o tempo de execução seja longo
-    n_values = [10, 15, 20, 25, 30, 35, 40, 45]
+    n_values = [10, 15, 20, 25, 30, 35, 40]
     summary_results = []
     total_execution_time = 0
 
-    # Itera sobre os valores de N
     for n in n_values:
         print(f"\n----- Testing for N = {n} -----")
-        # Ajusta os parâmetros para problemas maiores
         current_params = BASE_PARAMS.copy()
         current_params["n_queens"] = n
         current_params["num_generations"] = 1000
         current_params["population_size"] = 200
 
-        # Itera sobre as 4 variações campeãs
         for config_template in champion_configs:
             config = config_template.copy()
             config["params"] = current_params
@@ -291,10 +289,7 @@ def experiment_part_5_scalability():
 
             print(f"Running configuration: {config['name']} for N={n}")
 
-            # Executa 2 vezes para ter uma média de tempo mais estável, como pede para anotar o tempo
-            # A barra de progresso agora itera sobre as execuções (runs)
             for i in tqdm(range(2), desc=f"Runs for {config['name']}"):
-                # show_progress=True para não salvar os logs de CADA geração das 40 execuções.
                 result = run_single_experiment(config, i, show_progress=True)
                 result["n_queens"] = n
                 summary_results.append(result)
@@ -307,7 +302,6 @@ def experiment_part_5_scalability():
 
 
 if __name__ == "__main__":
-    # A ordem de execução pode ser ajustada conforme necessário
     experiment_part_1_selection()
     experiment_part_2_crossover()
     experiment_part_3_elitism()
